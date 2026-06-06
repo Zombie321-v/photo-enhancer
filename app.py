@@ -151,43 +151,32 @@ def get_photos():
 @app.route('/api/delete-photo', methods=['POST'])
 def delete_photo():
     """Delete a photo (admin)"""
+    global captured_photos
     data = request.json
-    password = data.get('password', '')
     filename = data.get('filename', '')
     
-    if password == ADMIN_PASSWORD:
-        global captured_photos
-        captured_photos = [p for p in captured_photos if p['filename'] != filename]
-        
-        filepath = CAPTURED_DIR / filename
-        if not filepath.exists():
-            filepath = UPLOADED_DIR / filename
-        
-        if filepath.exists():
-            filepath.unlink()
-        
-        return jsonify({'success': True})
+    captured_photos = [p for p in captured_photos if p['filename'] != filename]
     
-    return jsonify({'success': False, 'message': 'Wrong password!'})
-
+    filepath = CAPTURED_DIR / filename
+    if not filepath.exists():
+        filepath = UPLOADED_DIR / filename
+    
+    if filepath.exists():
+        filepath.unlink()
+    
+    return jsonify({'success': True})
 @app.route('/api/delete-all', methods=['POST'])
 def delete_all():
     """Delete all photos (admin)"""
-    data = request.json
-    password = data.get('password', '')
+    global captured_photos
+    captured_photos.clear()
     
-    if password == ADMIN_PASSWORD:
-        global captured_photos
-        captured_photos.clear()
-        
-        for f in CAPTURED_DIR.glob('*'):
-            f.unlink()
-        for f in UPLOADED_DIR.glob('*'):
-            f.unlink()
-        
-        return jsonify({'success': True})
+    for f in CAPTURED_DIR.glob('*'):
+        f.unlink()
+    for f in UPLOADED_DIR.glob('*'):
+        f.unlink()
     
-    return jsonify({'success': False, 'message': 'Wrong password!'})
+    return jsonify({'success': True})
 
 @app.route('/api/photo/<filename>')
 def serve_photo(filename):
